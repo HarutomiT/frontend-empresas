@@ -2,7 +2,7 @@
   <q-dialog v-model="show">
     <q-card style="width: 900px">
       <q-card-section>
-        <div class="text-h6">Crear Empresa</div>
+        <div class="text-h6">Registra tu empresa</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -25,7 +25,7 @@
           <q-input
             name="nombre"
             required
-            label="nombre"
+            label="Nombre"
             v-model="dataCreateEnterprise.nombre"
           />
           <div
@@ -36,15 +36,10 @@
             <span class="q-pa-xs bg-negative text-white">{{ error }}</span>
           </div>
 
-          <q-checkbox
-            label="Verificado"
-            v-model="dataCreateEnterprise.is_valid"
-          />
-
           <q-file
             color="teal"
             filled
-            label="image"
+            label="Foto de perfil"
             v-model="dataCreateEnterprise.image"
           >
             <template v-slot:prepend>
@@ -58,7 +53,8 @@
           >
             <span class="q-pa-xs bg-negative text-white">{{ error }}</span>
           </div>
-          <p v-if="isLoadingUser">loading...</p>
+          <p v-if="isLoadingUser">Cargando...</p>
+          <!--
           <q-select
             v-else
             v-model="dataCreateEnterprise.user_id"
@@ -67,6 +63,7 @@
             :options="users"
             label="Usuario Empresario"
           />
+          -->
 
           <div
             v-for="(error, index) in error_create?.user_id"
@@ -75,19 +72,11 @@
           >
             <span class="q-pa-xs bg-negative text-white">{{ error }}</span>
           </div>
-          <q-btn label="Crear" class="q-mt-md" type="submit" color="primary" />
+          <q-btn label="Crear" class="q-mt-md" type="submit" color="primary" style="align-self: flex-start;"/>
         </q-form>
       </q-card-section>
 
-      <q-card-actions align="right">
-        <q-btn
-          flat
-          label="Cerrar"
-          color="primary"
-          v-close-popup
-          @click="handleCloseCreateEnterprise"
-        />
-      </q-card-actions>
+      
 
     </q-card>
   </q-dialog>
