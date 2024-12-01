@@ -92,7 +92,7 @@ const enviar = async () => {
       });
       userStore.setAuth(true);
 
-      router.push("/home");
+      router.push("/");
     })
     .catch(function (error) {
       console.log(error);
