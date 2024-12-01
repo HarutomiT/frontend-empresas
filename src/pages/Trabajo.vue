@@ -577,22 +577,23 @@ async function obteneritem() {
 //};
 
 onMounted(() => {
-  const echo = getCurrentInstance().appContext.config.globalProperties.$echo;
+      const echo = getCurrentInstance().appContext.config.globalProperties.$echo;
+      
+      echo.channel('jobs-channel')
+        .listen('.job-updated', (data) => {
+          console.log('Evento recibido:', data);
 
-  echo.channel("jobs-channel").listen(".job-updated", (data) => {
-    console.log("Evento recibido:", data);
-
-    // Asegúrate de que la propiedad "job" esté presente
-    if (data.job) {
-      const jobIndex = jobs.findIndex((job) => job.id === data.job.id);
-      if (jobIndex !== -1) {
-        jobs[jobIndex] = data.job; // Actualiza el trabajo con los nuevos datos
-      } else {
-        jobs.push(data.job); // Si el trabajo no existe, lo agrega
-      }
-    }
-  });
-});
+          // Asegúrate de que la propiedad "job" esté presente
+          if (data.job) {
+            const jobIndex = jobs.findIndex(job => job.id === data.job.id);
+            if (jobIndex !== -1) {
+              jobs[jobIndex] = data.job;  // Actualiza el trabajo con los nuevos datos
+            } else {
+              jobs.push(data.job);  // Si el trabajo no existe, lo agrega
+            }
+          }
+        });
+    });
 
 // Llama a la función al montar el componente
 
