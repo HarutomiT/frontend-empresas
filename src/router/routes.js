@@ -1,13 +1,13 @@
 const routes = [
   {
-    path: "/error/",
+    path: "/error",
     component: () => import("layouts/MainLayout.vue"),
     children: [
       { path: "", component: () => import("pages/ErrorNotFound.vue") },
     ],
   },
   {
-    path: "/login/",
+    path: "/login",
     component: () => import("pages/Login.vue"),
   },
   {
@@ -15,9 +15,9 @@ const routes = [
     component: () => import("layouts/MainLayout.vue"),
     children: [
       {
-        path: ":slug/",
+        path: "/empresa",
         component: () => import("src/pages/EmpresaDetalles.vue"),
-        name: "home",
+        name: "empresa",
       },
       {
         path: ":enterprise/operator/:pk/",
@@ -38,7 +38,7 @@ const routes = [
     ],
   },
   {
-    path: "/his.trabajo/",
+    path: "/his.trabajo",
     component: () => import("layouts/MainLayout.vue"),
     children: [
       {

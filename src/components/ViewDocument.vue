@@ -1,6 +1,10 @@
 <template>
   <q-dialog v-model="show">
-    <q-card style="min-width: 100%" class="q-mx-md" v-if="!isLoading">
+    <q-card
+      style="height: 100%; width: 100%; max-width: 1500px; max-height: 1000px"
+      class="q-mx-md flex column justify-between"
+      v-if="!isLoading"
+    >
       <q-card-section class="flex justify-between">
         <div>
           <div class="text-h6 q-mb-sm">{{ doc.title }}</div>
@@ -22,15 +26,19 @@
         </div>
       </q-card-section>
 
-      <q-card-actions class="flex justify-between">
+      <q-card-actions class="q-pa-none" style="flex-grow: 1; overflow: hidden; padding: 0 10px;">
         <iframe
           :src="api_base_backend + doc.url_document"
-          style="width: 100%; min-height: 400px"
+          class="w-full"
+          style="flex-grow: 1; border: none; height: 100%; height: 100%"
         />
+      </q-card-actions>
+      <q-card-actions class="flex justify-end" style="height: auto">
         <q-btn
           flat
           label="Cerrar"
-          class="text-right"
+          class="text-left"
+          color="primary"
           v-close-popup
           @click="handleCloseMenu"
         />
@@ -59,10 +67,14 @@ export default {
       type: Number,
       required: true,
     },
+    operator: {
+      type: Boolean,
+    },
   },
   setup(props, { emit }) {
     const show = toRef(props, "show");
-    const id = toRef(props, "document");
+    const isOperatorMenu = toRef(props, "operator");
+    const doc_id = toRef(props, "document");
 
     const isLoading = ref(true);
 
@@ -70,15 +82,16 @@ export default {
 
     const { params } = useRoute();
 
-    console.log(id.value);
-    api
-      .get(`/${params.slug}/documents/${id.value}`)
-      .then((response) => {
-        if (response.status === 200) {
-          doc.value = response.data.document;
-        }
-        isLoading.value = false;
-      });
+    const operatorRoute = isOperatorMenu.value
+      ? `enterprises/${params.enterprise}/operators/${params.pk}/documents/${doc_id.value}`
+      : `enterprises/${params.slug}/documents/${doc_id.value}`;
+
+    api.get(operatorRoute).then((response) => {
+      if (response.status === 200) {
+        doc.value = response.data.document;
+      }
+      isLoading.value = false;
+    });
 
     const handleCloseMenu = () => {
       emit("handleCloseDocumentMenu");

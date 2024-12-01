@@ -1,15 +1,10 @@
 <template>
   <div>
-    <view-document
-      v-if="showDocumentMenu"
-      :show="showDocumentMenu"
-      :document="doc"
-      @handleCloseDocumentMenu="handleCloseDocumentMenu"
-    />
     <div v-if="!isLoading" class="q-mx-auto" style="max-width: 1000px">
+      <div v-if="empresa">
       <q-img
         :src="api_base_backend + empresa.image"
-        alt="Esta empresa no posee imagen"
+        alt="esta empresa no pose imagen"
         style="height: 350px"
         :fit="cover"
       >
@@ -50,218 +45,211 @@
                   :show="menuEmpresa"
                   @handleCloseMenuEmpresa="handleCloseMenuEmpresa"
                 />
+
+                <q-btn
+                  v-if="empresa.is_valid"
+                  label="Desvalidar"
+                  class="q-mt-md"
+                  type="button"
+                  color="negative"
+                  @click="handleDesvalidEnterprise"
+                />
+
+                <q-btn
+                  v-else
+                  label="Validar"
+                  class="q-mt-md"
+                  type="button"
+                  color="secondary"
+                  @click="handleValidEnterprise"
+                />
               </div>
             </q-card-section>
           </div>
         </div>
         <div style="width: 400px" v-if="empresa.user">
-          <h4 class="text-h5 q-my-none">ENCARGADO</h4>
+          <h5 class="text-h5 q-my-none">Encargado de la empresa</h5>
           <q-card>
             <q-card-section> Nombre: {{ empresa.user.name }} </q-card-section>
             <q-card-section> Email: {{ empresa.user.email }} </q-card-section>
           </q-card>
         </div>
       </div>
-      <h4 class="text-h5 q-my-none">OPERADORES</h4>
-      <div class="">
-        <q-table
-          class="my-sticky-column-table"
-          style="height: 400px; width: 100%"
-          flat
-          bordered
-          :rows="operators"
-          :columns="columnOperators"
-          row-key="id"
-          @row-click="onRowClick"
-          virtual-scroll
+      <div class="q-mt-md">
+        <MenuCreateOperator
+          v-if="createOperator"
+          :show="createOperator"
+          @handleCloseCreateOperator="handleCloseCreateOperator"
         />
-      </div>
-
-      <div style="width: 100%; height: 100vh" class="q-mt-lg">
-        <h4 class="text-h4 q-my-none">Documentos</h4>
+        <div class="flex justify-between items-center q-my-md">
+          <h4 class="text-h4 q-my-none">Operarios:</h4>
+          <q-btn
+            label="Crear Operario"
+            class="q-mt-md q-mr-sm"
+            type="button"
+            color="primary"
+            @click="handleOpenCreateOperator"
+          />
+        </div>
         <q-markup-table flat bordered>
-          <thead class="bg-teal text-white">
+          <thead class="bg-dark text-white">
             <tr>
-              <th class="text-left">Título</th>
-              <th class="text-left">Vencimiento</th>
+              <th class="text-left">C.I.</th>
+              <th class="text-left">Nombre</th>
               <th class="text-left">Autorización</th>
-              <th class="text-left">empresa</th>
+              <th class="text-left">Cargo</th>
+              <th class="text-center">Acciones</th>
             </tr>
           </thead>
-          <tbody :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-3'">
+          <tbody :class="$q.dark.isActive ? 'bg-grey-91973-08-07 00:00:00' : 'bg-grey-3'">
             <tr
-              v-for="(document, index) in documents"
+              v-for="(operator, index) in operators"
               :key="index"
-              class="cursor-pointer"
-              @click="() => handleOpenDocumentMenu(document.id)"
+              :class="`${operator.is_valid ? '' : 'bg-grey-4'} cursor-pointer`"
+              @click="() => handleClickOperator(operator.id)"
             >
               <td class="text-left">
-                {{ document.title }}
+                {{ operator.ci }}
               </td>
               <td class="text-left">
-                {{ document.expire }}
+                {{ operator.name }}
               </td>
               <td class="text-left">
-                <p :class="document.is_valid ? 'text-green' : 'text-red'">
-                  {{ document.is_valid ? "Autorizado" : "No Autorizado" }}
+                <p :class="operator.is_valid ? 'text-green' : 'text-red'">
+                  {{ operator.is_valid ? "Autorizado" : "No Autorizado" }}
                 </p>
               </td>
               <td class="text-left">
-                {{ document.enterprise }}
+                {{ operator.cargo }}
+              </td>
+              <td class="text-center">
+                <q-btn type="button" class="text-h5 text-negative">
+                  <span class="mdi mdi-trash-can"></span>
+                </q-btn>
               </td>
             </tr>
           </tbody>
         </q-markup-table>
       </div>
+      <table-documents :documents="documents" />
     </div>
 
     <div v-if="isLoading" class="text-center">Cargando...</div>
+
     <div v-if="empresaNoExiste" class="row justify-center">
       <h4 class="text-h4 column">
-        No existe esta empresa
         <q-icon name="warning" size="50px" color="warning" />
+        No existe esta empresa
       </h4>
     </div>
+
+    
+  </div>
+  <div v-else>
+    <create-empresa
+            v-if="enterpriseCreate"
+            :show="enterpriseCreate"
+            @handleCloseCreateEnterprise="handleCloseCreateEnterprise"
+          />
+      </div>
   </div>
 </template>
 
 <script>
 import MenuEditEmpresa from "src/components/MenuEditEmpresa.vue";
-import { useRouter } from "vue-router";
+import MenuCreateOperator from "src/components/MenuCreateOperator.vue";
+import { useRoute, useRouter } from "vue-router";
 import { api } from "src/boot/axios";
 import { ref } from "vue";
 import { api_base_backend } from "../helpers.js";
-import ViewDocument from "../components/ViewDocument.vue";
-import { useUserStore } from "src/store/user.store.js";
+import TableDocuments from "../components/TableDocuments.vue";
+import CreateEmpresa from 'src/components/CreateEmpresa.vue';
 
 export default {
   components: {
     MenuEditEmpresa,
-    ViewDocument,
+    MenuCreateOperator,
+    TableDocuments,
+    CreateEmpresa,
   },
   setup() {
-   
     const router = useRouter();
+  
+  const user = useUserStore().getUser;
 
-    const userStore = useUserStore();
-    const user = userStore.getUser
-    console.log(user)
-    const { slug } = user.enterprise
+  const isLoading = ref(true);
+  const empresa = ref(null);
+  const operators = ref(null);
+  const documents = ref(null);
 
-    const isLoading = ref(true);
-    const empresa = ref(null);
-    const operators = ref(null);
-    const documents = ref(null);
+  const empresaNoExiste = ref(false);
 
-    const empresaNoExiste = ref(false);
+  const menuEmpresa = ref(false);
 
-    const menuEmpresa = ref(false);
+  const fetchOperators = async () => {
+    await api.get(`enterprises/${user.enterprise.slug}/operators`).then((response) => {
+      operators.value = response.data.operators;
+    });
+  };
 
-    const handleValidEnterprise = () => {
-      api
-        .patch(`enterprises/${user.enterprise.slug}`, {
-          is_valid: true,
-        })
-        .then((response) => {
-          if (response.status === 200) {
-            router.push("/home");
-          }
-        });
-    };
-
-    const handleDesvalidEnterprise = () => {
-      api.delete(`enterprises/${user.enterprise.slug}`).then((response) => {
-        if (response.status === 200) {
-
-          router.push("/home");
-        }
-      });
-    };
-
-    const columnOperators = [
-      { name: "ci", label: "C.I.", field: "ci", align: "left" },
-      { name: "name", label: "Nombre", field: "name", align: "left" },
-      {
-        name: "is_valid",
-        label: "Autorización",
-        field: "is_valid",
-        align: "left",
-      },
-      {
-        name: "cargo",
-        label: "Cargo",
-        field: "cargo",
-        align: "left",
-      },
-    ];
-
-    api
-      .get(`enterprises/${user.enterprise.slug}`)
-      .then(async (response) => {
-        empresa.value = response.data.enterprise;
-
-        if (response.status === 200) {
-          await api
-            .get(`enterprises/${slug}/operators`)
-            .then((response) => {
-              operators.value = response.data.operators;
-            });
-          await api
-            .get(`/${params.slug}/documents`)
-            .then((response) => {
-              documents.value = response.data.documents;
-            });
-        }
-      })
-      .catch((err) => {
-        isLoading.value = false;
-        if (err?.response?.status === 404) {
-          empresaNoExiste.value = true;
-        }
-      })
-      .finally(() => {
-        isLoading.value = false;
-      });
+  api
+    .get(`enterprises/${user.enterprise.slug}`)
+    .then(async (response) => {
+      empresa.value = response.data.enterprise;
+      if (response.status === 200) {
+        fetchOperators();
+        await api
+          .get(`enterprises/${user.enterprise.slug}/documents`)
+          .then((response) => {
+            documents.value = response.data.documents;
+          });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      isLoading.value = false;
+      if (err?.response?.status === 404) {
+        empresaNoExiste.value = true;
+      }
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
 
     const handleOpenMenuEmpresa = () => (menuEmpresa.value = true);
     const handleCloseMenuEmpresa = () => {
       menuEmpresa.value = false;
     };
 
-    const onRowClick = (e, item) => {
+    const handleClickOperator = (pk) => {
       router.push({
         name: "operators-detail",
         params: {
-          pk: item.id,
+          pk,
           enterprise: params.slug,
         },
       });
     };
 
-    const doc = ref(null);
-    const showDocumentMenu = ref(false);
-
-    const handleOpenDocumentMenu = (pk) => {
-      doc.value = pk;
-      showDocumentMenu.value = true;
+    const createOperator = ref(false);
+    const handleOpenCreateOperator = () => {
+      createOperator.value = true;
     };
-    const handleCloseDocumentMenu = () => {
-      showDocumentMenu.value = false;
+    const handleCloseCreateOperator = () => {
+      createOperator.value = false;
+      fetchOperators();
     };
-
     return {
-      doc,
-      showDocumentMenu,
-      handleOpenDocumentMenu,
-      handleCloseDocumentMenu,
+      createOperator,
+      handleCloseCreateOperator,
+      handleOpenCreateOperator,
       isLoading,
       empresa,
       empresaNoExiste,
       api_base_backend,
-      columnOperators,
       operators,
       handleValidEnterprise,
-      onRowClick,
+      handleClickOperator,
       handleCloseMenuEmpresa,
       handleOpenMenuEmpresa,
       handleDesvalidEnterprise,
@@ -270,6 +258,32 @@ export default {
       pagination: ref({
         rowsPerPage: 0,
       }),
+    };
+  },
+
+
+setup() {
+    const isLoading = ref(true);
+    const empresa = ref(null); // Aquí deberías obtener la empresa del usuario
+    const showCreateEmpresa = ref(false);
+
+  
+    setTimeout(() => {
+      empresa.value = null; 
+      isLoading.value = false;
+    }, 1000);
+
+    const showCreateEmpresaDialog = () => {
+      showCreateEmpresa.value = true;
+    };
+
+
+    return {
+      isLoading,
+      empresa,
+      showCreateEmpresa,
+      showCreateEmpresaDialog,
+      handleCloseCreateEnterprise,
     };
   },
 };
